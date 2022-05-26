@@ -1,0 +1,48 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-05-26T03:47:23Z'
+  groups:
+    -
+      uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    -
+      uuid: 41f0c027c71247b18b695af4b3678152
+      template: 'Veeam backup'
+      name: 'Veeam backup'
+      groups:
+        -
+          name: Templates/Applications
+      discovery_rules:
+        -
+          uuid: 2d05fcfba1f54196a1393a6ca8fb2b48
+          name: 'Backup jobs discovery'
+          key: jobs.discovery
+          delay: 30m
+          item_prototypes:
+            -
+              uuid: 4e83a877f694450e8f9206705ec8f13f
+              name: '{#BKNAME} - Job status'
+              key: 'job.state[{#BKNAME}]'
+              delay: 30m
+              history: 21d
+              trends: 65d
+              tags:
+                -
+                  tag: Application
+                  value: VeeamBackup
+              trigger_prototypes:
+                -
+                  uuid: 19f3d55dd83c47328d86cad50395289f
+                  expression: 'last(/Veeam backup/job.state[{#BKNAME}])=2'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Veeam backup/job.state[{#BKNAME}])=1'
+                  name: 'VeeamBackup - job {#BKNAME} is complete with errors.'
+                  priority: INFO
+                -
+                  uuid: 66e5e9ab6f3d4109ae8bd4767db67071
+                  expression: 'last(/Veeam backup/job.state[{#BKNAME}])=0'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Veeam backup/job.state[{#BKNAME}])<0'
+                  name: 'VeeamBackup - job {#BKNAME} is failed'
+                  priority: WARNING
